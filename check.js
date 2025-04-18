@@ -1,30 +1,29 @@
-import fetch from "node-fetch";
-import db from "./firebase.js";
+import axios from 'axios';
+import * as admin from 'firebase-admin';
 
-export async function checkAllLinks() {
-  const snapshot = await db.ref("urls").once("value");
-  const data = snapshot.val();
+const db = admin.database();
 
-  if (!data) return;
+export const checkAllLinks = async () => {
+  const ref = db.ref('links');  // تعديل هنا ليكون مرجعا لقاعدة البيانات
+  const snapshot = await ref.once('value');
+  const links = snapshot.val();
 
-  for (const userId in data) {
-    for (const linkId in data[userId]) {
-      const link = data[userId][linkId];
+  if (links) {
+    for (const key in links) {
+      const link = links[key];
       try {
-        const res = await fetch(link.url, { method: 'HEAD', timeout: 5000 });
-        const status = res.ok ? "active" : "down";
-        await db.ref(`urls/${userId}/${linkId}`).update({
-          status,
-          lastChecked: new Date().toISOString(),
-        });
-        console.log(`Checked: ${link.url} => ${status}`);
-      } catch (err) {
-        await db.ref(`urls/${userId}/${linkId}`).update({
-          status: "down",
-          lastChecked: new Date().toISOString(),
-        });
-        console.log(`Failed: ${link.url} => down`);
+        const response = await axios.get(link.url);
+        const status = response.status;
+        console.log(`Link: ${link.url} Status: ${status}`);
+
+        // تحديث حالة الرابط في Firebase
+        const statusRef = db.ref(`links/${key}/status`);
+        await statusRef.set(status);
+      } catch (error) {
+        console.error(`Error checking ${link.url}: ${error}`);
+        const statusRef = db.ref(`links/${key}/status`);
+        await statusRef.set("down");
       }
     }
   }
-}
+};
