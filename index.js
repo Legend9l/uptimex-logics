@@ -5,7 +5,7 @@ import { initializeApp, credential, database } from "firebase-admin"; // است�
 // تهيئة Firebase
 initializeApp({
   credential: credential.applicationDefault(), // استخدم المفتاح الخاص بك هنا إذا كنت تحتاجه
-  databaseURL: "https://your-project-id.firebaseio.com" // ضع هنا رابط قاعدة البيانات الخاص بك في Firebase
+  databaseURL: "https://uptimex-monitor-default-rtdb.firebaseio.com/" // ضع هنا رابط قاعدة البيانات الخاص بك في Firebase
 });
 
 const app = express();
